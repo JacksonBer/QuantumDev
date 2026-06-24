@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Devs | Premium Web Engineering</title>
+    <style>
+        /* --- RESET & DESIGN SYSTEM --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        }
+        :root {
+            --bg-color: #0b0d10;
+            --text-color: #f1f5f9;
+            --accent-color: #00f3ff; /* Electric Cyan */
+            --accent-glow: rgba(0, 243, 255, 0.25);
+            --card-bg: rgba(11, 13, 16, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* --- FULL SCREEN BACKGROUND IMAGE LAYER --- */
+        .bg-image-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(11, 13, 16, 0.85), #0b0d10), 
+                        url('https://images.unsplash.com/photo-1504639725590-34d0984388bd?auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            z-index: -2;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed;
+            top: 0; width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 10%;
+            background: rgba(11, 13, 16, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 100;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .logo {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #fff;
+        }
+        .logo span { color: var(--accent-color); }
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            margin-left: 2rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: color 0.3s;
+            opacity: 0.7;
+        }
+        .nav-links a:hover { color: var(--accent-color); opacity: 1; }
+
+        /* --- LAYOUTS --- */
+        section {
+            padding: 10rem 10% 6rem 10%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 4rem;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+        }
+        .section-title span { color: var(--accent-color); font-weight: 600; }
+
+        /* --- HERO SECTION --- */
+        #hero {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        .hero-left {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1.5px;
+        }
+        .hero-title span { color: var(--accent-color); }
+        .hero-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.7;
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+        }
+        .cta-btn {
+            padding: 0.9rem 2.2rem;
+            background: rgba(0, 243, 255, 0.03);
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .cta-btn:hover {
+            background: var(--accent-color);
+            color: #000;
+            box-shadow: 0 0 25px var(--accent-glow);
+            transform: translateY(-2px);
+        }
+
+        .code-window {
+            background: rgba(6, 7, 9, 0.85);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            color: #a9b2c3;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transform: translateX(40px);
+            animation: fadeInRight 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+        }
+        .window-header { display: flex; gap: 6px; margin-bottom: 1.5rem; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff5f56; }
+        .dot:nth-child(2) { background: #ffbd2e; }
+        .dot:nth-child(3) { background: #27c93f; }
+        .code-line { margin-bottom: 0.4rem; white-space: nowrap; overflow: hidden; }
+        .c-kw { color: #ff79c6; }
+        .c-fn { color: var(--accent-color); }
+        .c-str { color: #f1fa8c; }
+
+        /* --- PROJECTS SECTION --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 3rem;
+        }
+        .project-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .webpage-picture {
+            height: 240px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid var(--card-border);
+            background-size: cover;
+            background-position: center top;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #pic1 { background-image: url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80'); }
+        #pic2 { background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80'); }
+        #pic3 { background-image: url('https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?auto=format&fit=crop&w=800&q=80'); }
+
+        .project-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 243, 255, 0.12);
+        }
+        .project-card:hover .webpage-picture { transform: scale(1.06); }
+        .project-info { 
+            padding: 2rem; 
+            background: rgba(11, 13, 16, 0.9);
+            position: relative;
+            z-index: 2;
+        }
+        .project-info h3 { font-size: 1.3rem; margin-bottom: 0.5rem; font-weight: 500; }
+        .project-info p { opacity: 0.6; font-size: 0.9rem; line-height: 1.6; }
+
+        /* --- TEAM PROFILE SECTION --- */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 3rem;
+        }
+        .team-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 2.5rem;
+            display: flex;
+            gap: 2rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .team-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.08);
+        }
+        .profile-img {
+            width: 110px;
+            height: 110px;
+            border-radius: 6px;
+            background-size: cover;
+            background-position: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+        .team-card:nth-child(1) .profile-img { background-image: url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80'); }
+        .team-card:nth-child(2) .profile-img { background-image: url('https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80'); }
+        
+        .profile-details h3 { font-size: 1.4rem; font-weight: 600; margin-bottom: 0.2rem; }
+        .profile-role { font-size: 0.8rem; color: var(--accent-color); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1rem; }
+        .profile-bio { opacity: 0.6; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.2rem; }
+        
+        .tech-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .tech-tag {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            color: #a9b2c3;
+        }
+
+        /* --- REVIEWS --- */
+        .review-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 2.5rem;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .review-text { font-style: italic; opacity: 0.8; margin-bottom: 1.5rem; line-height: 1.6; }
+        .author { font-size: 0.85rem; font-weight: 700; letter-spacing: 1px; color: var(--accent-color); text-transform: uppercase; }
+
+        /* --- BOOKING --- */
+        .booking-container {
+            max-width: 600px; width: 100%; margin: 0 auto;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 3rem; border-radius: 8px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; font-size: 0.75rem; margin-bottom: 0.5rem; letter-spacing: 1.5px; opacity: 0.6; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--card-border);
+            color: white; border-radius: 4px; outline: none;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--accent-color); }
+        .submit-btn {
+            width: 100%; padding: 1rem; background: transparent;
+            border: 1px solid var(--accent-color); color: var(--accent-color);
+            cursor: pointer; border-radius: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s;
+        }
+        .submit-btn:hover { background: var(--accent-color); color: #000; box-shadow: 0 0 20px var(--accent-glow); }
+
+        /* --- ADVANCED SCROLL REVEALS --- */
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInRight { to { opacity: 1; transform: translateX(0); } }
+
+        @media (max-width: 968px) {
+            #hero { grid-template-columns: 1fr; text-align: center; padding-top: 8rem; }
+            .hero-title { font-size: 2.8rem; }
+            .code-window { display: none; }
+            .team-card { flex-direction: column; gap: 1.5rem; }
+        }
+        @media (max-width: 480px) {
+            .team-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-image-overlay"></div>
+    <canvas id="bg-canvas"></canvas>
+
+    <nav>
+        <div class="logo">QUANTUM<span>.</span></div>
+        <div class="nav-links">
+            <a href="#projects">Projects</a>
+            <a href="#team">Our Team</a>
+            <a href="#reviews">Reviews</a>
+            <a href="#book">Book Appt</a>
+        </div>
+    </nav>
+
+    <section id="hero">
+        <div class="hero-left">
+            <h1 class="hero-title">We engineer high fidelity <span>web applications</span>.</h1>
+            <p class="hero-subtitle">Minimal architecture, lightning-quick interactions, tailored specifically for creative engineering teams.</p>
+            <button class="cta-btn" onclick="document.getElementById('book').scrollIntoView();">Initialize Project</button>
+        </div>
+        
+        <div class="code-window">
+            <div class="window-header"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            <div class="code-line"><span class="c-kw">const</span> team = <span class="c-str">"Web Developers"</span>;</div>
+            <div class="code-line"><span class="c-kw">function</span> <span class="c-fn">buildProject</span>(spec) {</div>
+            <div class="code-line">&nbsp;&nbsp;<span class="c-kw">return</span> Object.<span class="c-fn">assign</span>({</div>
+            <div class="code-line">&nbsp;&nbsp;&nbsp;&nbsp;style: <span class="c-str">"Minimalistic"</span>,</div>
+            <div class="code-line">&nbsp;&nbsp;&nbsp;&nbsp;speed: <span class="c-str">"100%"</span>,</div>
+            <div class="code-line">&nbsp;&nbsp;&nbsp;&nbsp;animations: <span class="c-str">"Advanced"</span></div>
+            <div class="code-line">&nbsp;&nbsp;}, spec);</div>
+            <div class="code-line">}</div>
+            <div class="code-line"><span class="c-fn">console</span>.<span class="c-fn">log</span>(<span class="c-str">"System Online."</span>);</div>
+        </div>
+    </section>
+
+    <section id="projects">
+        <h2 class="section-title reveal">Featured <span>Interfaces</span></h2>
+        <div class="grid reveal">
+            <div class="project-card">
+                <div class="webpage-picture" id="pic1"></div>
+                <div class="project-info">
+                    <h3>Aura Commerce</h3>
+                    <p>Minimalist checkout terminal architecture featuring ultra-smooth motion layouts.</p>
+                </div>
+            </div>
+            <div class="project-card">
+                <div class="webpage-picture" id="pic2"></div>
+                <div class="project-info">
+                    <h3>Nexus Telemetry</h3>
+                    <p>High-refresh rate dashboard optimized for massive data visualizations.</p>
+                </div>
+            </div>
+            <div class="project-card">
+                <div class="webpage-picture" id="pic3"></div>
+                <div class="project-info">
+                    <h3>Synapse Platform</h3>
+                    <p>Experimental web interactive portal designed with low-latency CSS canvas systems.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="team">
+        <h2 class="section-title reveal">The <span>Engineers</span></h2>
+        <div class="team-grid reveal">
+
+            <div class="team-card">
+                <div class="profile-img"></div>
+                <div class="profile-details">
+                    <h3>Jackson Bernard</h3>
+                    <p class="profile-role">Lead Architect & Founder</p>
+                    <p class="profile-bio">Specializes in system performance modeling and interactive UI frameworks. Oversees technical direction for all production builds.</p>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Next.js</span>
+                        <span class="tech-tag">WebGL</span>
+                        <span class="tech-tag">TypeScript</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="team-card">
+                <div class="profile-img"></div>
+                <div class="profile-details">
+                    <h3>Simon White</h3>
+                    <p class="profile-role">Full Stack Engineer</p>
+                    <p class="profile-bio">Manages database scaling, low-latency API networks, and secure booking portal integrations to back up frontend visuals.</p>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Node.js</span>
+                        <span class="tech-tag">GraphQL</span>
+                        <span class="tech-tag">WebSockets</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="reviews">
+        <h2 class="section-title reveal">Engineered <span>Trust</span></h2>
+        <div class="grid reveal">
+            <div class="review-card">
+                <p class="review-text">"The speed of our new application is unmatched. They stripped away all the bloat and left us with pure performance."</p>
+                <p class="author">// Senior Tech Director, Helix Inc.</p>
+            </div>
+            <div class="review-card">
+                <p class="review-text">"Flawless integration of subtle transitions. The cyber-minimal theme perfectly showcases our hardware products."</p>
+                <p class="author">// Creative Lead, Arc Dynamics</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="book">
+        <h2 class="section-title reveal" style="text-align: center;">Secure a <span>Session</span></h2>
+        <div class="booking-container reveal">
+            <form id="booking-form">
+                <input type="hidden" name="accessKey" value="sf_a036a055695f13a4ddf3d686">
+                <input type="hidden" name="redirectTo" value="">
+                
+                <div class="form-group">
+                    <label>DEVELOPER TEAM LEAVE NAME</label>
+                    <input type="text" name="name" required placeholder="Ex: Lead Engineer">
+                </div>
+                <div class="form-group">
+                    <label>CONTACT FIELD (EMAIL)</label>
+                    <input type="email" name="email" required placeholder="name@domain.com">
+                </div>
+                <div class="form-group">
+                    <label>PROJECT SPECIFICATIONS</label>
+                    <textarea rows="4" name="message" required placeholder="Describe system details..."></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Send Launch Request</button>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        /* --- BACKGROUND PARTICLE ENGINE --- */
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let dots = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Dot {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vX = (Math.random() - 0.5) * 0.3;
+                this.vY = (Math.random() - 0.5) * 0.3;
+            }
+            step() {
+                this.x += this.vX;
+                this.y += this.vY;
+                if (this.x < 0 || this.x > canvas.width) this.vX *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vY *= -1;
+            }
+            render() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 1, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 243, 255, 0.15)';
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 40; i++) dots.push(new Dot());
+
+        function loop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            dots.forEach(d => { d.step(); d.render(); });
+            requestAnimationFrame(loop);
+        }
+        loop();
+
+        /* --- SCROLL REVEAL (INTERSECTION OBSERVER) --- */
+        const items = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('active');
+                    observer.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.12 });
+
+        items.forEach(i => observer.observe(i));
+
+        /* --- SILENT AUTOMATIC FORM DISPATCHER --- */
+        const form = document.getElementById('booking-form');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const sBtn = form.querySelector('.submit-btn');
+            sBtn.innerText = 'Transmitting...';
+            sBtn.style.borderColor = '#ffff00';
+            sBtn.style.color = '#ffff00';
+            sBtn.disabled = true;
+
+            const formData = new FormData(form);
+            
+            formData.append('subject', 'New Client Booking Request!');
+            formData.append('replyTo', 'noohislam957@gmail.com');
+
+            // Send seamlessly behind the scenes
+            fetch('https://api.staticforms.xyz/submit', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    sBtn.innerText = 'Request Sent Automatically!';
+                    sBtn.style.borderColor = '#00ff66';
+                    sBtn.style.color = '#00ff66';
+                    form.reset();
+                } else {
+                    sBtn.innerText = 'Submission Route Failed.';
+                    sBtn.style.borderColor = '#ff3333';
+                    sBtn.style.color = '#ff3333';
+                }
+                setTimeout(() => {
+                    sBtn.innerText = 'Send Launch Request';
+                    sBtn.style.borderColor = 'var(--accent-color)';
+                    sBtn.style.color = 'var(--accent-color)';
+                    sBtn.disabled = false;
+                }, 3500);
+            })
+            .catch(error => {
+                sBtn.innerText = 'Network Error.';
+                sBtn.style.borderColor = '#ff3333';
+                sBtn.style.color = '#ff3333';
+                setTimeout(() => {
+                    sBtn.innerText = 'Send Launch Request';
+                    sBtn.style.borderColor = 'var(--accent-color)';
+                    sBtn.style.color = 'var(--accent-color)';
+                    sBtn.disabled = false;
+                }, 3500);
+            });
+        });
+    </script>
+</body>
+</html>
